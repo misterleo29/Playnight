@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NightPlay — Party Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #090910;
+      --bg2: #0f0f1a;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --accent: #c8ff57;
+      --accent2: #ff4da6;
+      --accent3: #5ce1ff;
+      --text: #f0f0ff;
+      --muted: rgba(240,240,255,0.4);
+      --radius: 20px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent2); top: -150px; left: -150px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent); bottom: -100px; right: -100px; }
+    .blob-3 { width: 300px; height: 300px; background: var(--accent3); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== SCREENS ===== */
+    .screen { display: none; flex-direction: column; flex: 1; }
+    .screen.active { display: flex; }
+
+    /* ===== HEADER ===== */
+    .logo {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .logo span { color: var(--accent); }
+    .tagline {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ===== INPUTS ===== */
+    input, textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      border-radius: 14px;
+      border: none;
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:active::after { opacity: 0.1; }
+    .btn-primary {
+      background: var(--accent);
+      color: #090910;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,255,87,0.3); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .btn-pink {
+      background: var(--accent2);
+      color: white;
+    }
+    .btn-pink:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,77,166,0.3); }
+    .btn-blue {
+      background: var(--accent3);
+      color: #090910;
+    }
+    .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(92,225,255,0.3); }
+
+    .btn + .btn { margin-top: 10px; }
+
+    /* ===== BADGE CODE ===== */
+    .room-code-badge {
+      background: var(--accent);
+      color: #090910;
+      font-family: var(--font-head);
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      text-align: center;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .room-code-badge:active { transform: scale(0.97); }
+
+    /* ===== PLAYERS LIST ===== */
+    .players-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .player-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+    .player-chip .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .player-chip .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .player-chip.host { border-color: var(--accent); }
+    .crown { font-size: 11px; }
+
+    /* ===== GAME MENU ===== */
+    .game-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .game-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      color: var(--text);
+    }
+    .game-btn:hover { border-color: var(--accent); background: rgba(200,255,87,0.05); transform: translateY(-2px); }
+    .game-btn .icon { font-size: 28px; margin-bottom: 8px; }
+    .game-btn .label { font-family: var(--font-head); font-size: 13px; font-weight: 700; }
+
+    /* ===== GAME SCREEN ===== */
+    .game-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .game-title {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ===== PHOTO ROULETTE ===== */
+    .photo-box {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      margin: 0 auto 24px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+    }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .vote-options { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .vote-btn {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    .vote-btn:hover { border-color: var(--accent3); background: rgba(92,225,255,0.07); }
+    .vote-btn.selected { border-color: var(--accent); background: rgba(200,255,87,0.1); }
+    .vote-btn.correct { border-color: var(--accent); background: rgba(200,255,87,0.2); }
+    .vote-btn.wrong { border-color: var(--accent2); background: rgba(255,77,166,0.15); opacity: 0.6; }
+
+    /* ===== VRAI/FAUX ===== */
+    .anecdote-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      font-size: 17px;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 24px;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vf-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .vf-btn {
+      padding: 20px;
+      border-radius: 16px;
+      border: none;
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .vf-btn:hover { transform: scale(1.03); }
+    .vf-true { background: var(--accent); color: #090910; }
+    .vf-false { background: var(--accent2); color: white; }
+
+    /* ===== ACTION VÉRITÉ ===== */
+    .av-category {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .av-cat-btn {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .av-cat-btn.active { border-color: var(--accent); background: rgba(200,255,87,0.1); color: var(--accent); }
+    .prompt-display {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      font-size: 18px;
+      line-height: 1.5;
+      text-align: center;
+      margin-bottom: 20px;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .prompt-display.empty { color: var(--muted); font-size: 15px; }
+    .level-indicator {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .level-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .level-dot.active { background: var(--accent2); }
+
+    /* ===== GÉOLOC ===== */
+    .geo-player-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .geo-icon { font-size: 20px; }
+    .geo-info { flex: 1; }
+    .geo-name { font-weight: 500; font-size: 14px; }
+    .geo-dist { font-size: 12px; color: var(--muted); }
+    .geo-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(92,225,255,0.15);
+      color: var(--accent3);
+      font-weight: 600;
+    }
+
+    /* ===== PSEUDO ===== */
+    .pseudo-reveal {
+      text-align: center;
+      padding: 24px;
+    }
+    .pseudo-big {
+      font-family: var(--font-head);
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .pseudo-sub { color: var(--muted); font-size: 14px; }
+
+    /* ===== NOTIFICATION ===== */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent);
+      color: #090910;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 40px;
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ===== WAITING ===== */
+    .waiting-spinner {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+    .dot-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.2s infinite;
+    }
+    .dot-pulse:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* ===== SCORE ===== */
+    .score-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .score-rank { font-family: var(--font-head); font-weight: 800; font-size: 22px; color: var(--muted); width: 32px; }
+    .score-rank.gold { color: #ffd700; }
+    .score-rank.silver { color: #c0c0c0; }
+    .score-rank.bronze { color: #cd7f32; }
+    .score-pts { font-family: var(--font-head); font-weight: 800; font-size: 18px; color: var(--accent); }
+
+    /* ===== PHOTO UPLOAD ===== */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 16px;
+    }
+    .upload-zone:hover { border-color: var(--accent); }
+    .upload-zone .icon { font-size: 40px; margin-bottom: 8px; }
+    .upload-zone p { color: var(--muted); font-size: 14px; }
+    #photoInput { display: none; }
+    .preview-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* ===== SETUP SCREEN ===== */
+    .setup-notice {
+      background: rgba(255,77,166,0.08);
+      border: 1px solid rgba(255,77,166,0.3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .setup-notice h3 { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--accent2); margin-bottom: 8px; }
+    .setup-notice p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .setup-notice code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--accent3);
+    }
+
+    /* ===== MISC ===== */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .text-center { text-align: center; }
+    .text-muted { color: var(--muted); font-size: 13px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mt-8 { margin-top: 8px; }
+    .flex-center { display: flex; justify-content: center; align-items: center; }
+
+    /* Fade in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .screen.active > * { animation: fadeUp 0.4s ease both; }
+    .screen.active > *:nth-child(2) { animation-delay: 0.05s; }
+    .screen.active > *:nth-child(3) { animation-delay: 0.1s; }
+    .screen.active > *:nth-child(4) { animation-delay: 0.15s; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #13131f;
+      border-radius: 24px 24px 0 0;
+      padding: 28px 24px 40px;
+      animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 0 auto 20px;
+    }
+    .modal-title {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BG Blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- ==================== HOME ==================== -->
+  <div class="screen active" id="screen-home">
+    <div class="logo">Night<span>Play</span></div>
+    <div class="tagline">Party Game · En ligne</div>
+
+    <div class="card">
+      <div class="card-title">Ton pseudo</div>
+      <input type="text" id="pseudoInput" placeholder="Entre ton pseudo…" maxlength="20" />
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ta photo (optionnel)</div>
+      <div class="upload-zone" onclick="document.getElementById('avatarInput').click()">
+        <div class="icon" id="uploadIcon">📸</div>
+        <p id="uploadTxt">Appuie pour ajouter ta photo</p>
+        <img id="avatarPreview" class="preview-img" style="display:none" />
+      </div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" />
+    </div>
+
+    <button class="btn btn-primary" onclick="createRoom()">✦ Créer une salle</button>
+    <button class="btn btn-secondary" onclick="showJoinModal()">Rejoindre une salle</button>
+
+    <div class="divider"></div>
+    <p class="text-center text-muted">NightPlay v1.0 — Jeux en soirée 🎉</p>
+  </div>
+
+  <!-- ==================== LOBBY ==================== -->
+  <div class="screen" id="screen-lobby">
+    <div style="text-align:center;margin-bottom:8px">
+      <span class="text-muted" style="font-size:12px;letter-spacing:2px;text-transform:uppercase;">Code de la salle</span>
+    </div>
+    <div class="room-code-badge" id="roomCodeDisplay" onclick="copyCode()">……</div>
+    <p class="text-center text-muted mb-16" style="font-size:12px">Appuie pour copier le code</p>
+
+    <div class="card">
+      <div class="card-title">Joueurs connectés</div>
+      <div class="players-list" id="playersList"></div>
+      <div class="waiting-spinner" id="waitingSpinner">
+        <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
+      </div>
+    </div>
+
+    <div id="hostControls" style="display:none">
+      <div class="card">
+        <div class="card-title">Choisir un mini-jeu</div>
+        <div class="game-grid">
+          <div class="game-btn" onclick="startGame('photo')">
+            <div class="icon">📸</div>
+            <div class="label">Photo Roulette</div>
+          </div>
+          <div class="game-btn" onclick="startGame('av')">
+            <div class="icon">🎲</div>
+            <div class="label">Action / Vérité</div>
+          </div>
+          <div class="game-btn" onclick="startGame('anecdote')">
+            <div class="icon">🤔</div>
+            <div class="label">Vrai ou Faux</div>
+          </div>
+          <div class="game-btn" onclick="startGame('pseudo')">
+            <div class="icon">🏷️</div>
+            <div class="label">Pseudo</div>
+          </div>
+          <div class="game-btn" onclick="startGame('geo')">
+            <div class="icon">📍</div>
+            <div class="label">Géoloc</div>
+          </div>
+          <div class="game-btn" onclick="showScores()">
+            <div class="icon">🏆</div>
+            <div class="label">Scores</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="guestWaiting" style="display:none">
+      <div class="card text-center">
+        <p class="text-muted" style="margin-bottom:12px">En attente que l'hôte lance un jeu…</p>
+        <div class="waiting-spinner">
+          <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="leaveRoom()" style="margin-top:12px">Quitter la salle</button>
+  </div>
+
+  <!-- ==================== GAME: PHOTO ROULETTE ==================== -->
+  <div class="screen" id="screen-photo">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Photo Roulette 📸</div>
+    </div>
+
+    <!-- Phase 1: Upload -->
+    <div id="photo-phase-upload">
+      <div class="card">
+        <div class="card-title">Envoie une photo de toi !</div>
+        <div class="upload-zone" onclick="document.getElementById('photoInput').click()">
+          <div class="icon">📷</div>
+          <p>Appuie pour choisir une photo</p>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" />
+        <img id="photoPreview" class="preview-img" style="display:none" />
+        <button class="btn btn-primary" id="submitPhotoBtn" onclick="submitPhoto()">Envoyer ma photo ✓</button>
+      </div>
+      <div id="waitingOthers" style="display:none" class="card text-center">
+        <p class="text-muted mb-16">Photo envoyée ! En attente des autres…</p>
+        <div class="waiting-spinner">
+          <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2: Vote -->
+    <div id="photo-phase-vote" style="display:none">
+      <div class="photo-box" id="photoDisplay">❓</div>
+      <div class="card">
+        <div class="card-title">À qui appartient cette photo ?</div>
+        <div class="vote-options" id="voteOptions"></div>
+        <button class="btn btn-primary" id="confirmVoteBtn" onclick="confirmVote()" style="margin-top:16px;display:none">Confirmer mon vote ✓</button>
+      </div>
+    </div>
+
+    <!-- Phase 3: Results -->
+    <div id="photo-phase-results" style="display:none">
+      <div class="card text-center">
+        <div style="font-size:50px;margin-bottom:12px">🎉</div>
+        <div class="card-title">Résultats</div>
+        <div id="photoResultsList"></div>
+      </div>
+      <button class="btn btn-primary" onclick="nextPhotoRound()" id="nextPhotoBtn">Photo suivante →</button>
+    </div>
+  </div>
+
+  <!-- ==================== GAME: ACTION OU VÉRITÉ ==================== -->
+  <div class="screen" id="screen-av">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Action / Vérité 🎲</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Intensité</div>
+      <div class="av-category">
+        <div class="av-cat-btn active" id="lvl-soft" onclick="setLevel('soft')">🌿 Soft</div>
+        <div class="av-cat-btn" id="lvl-normal" onclick="setLevel('normal')">🔥 Normal</div>
+      </div>
+      <div class="level-indicator">
+        <div class="level-dot active" id="ld1"></div>
+        <div class="level-dot" id="ld2"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Catégorie</div>
+      <div class="av-category">
+        <div class="av-cat-btn active" id="cat-action" onclick="setCategory('action')">⚡ Action</div>
+        <div class="av-cat-btn" id="cat-verite" onclick="setCategory('verite')">💬 Vérité</div>
+      </div>
+    </div>
+
+    <div class="prompt-display empty" id="avPromptDisplay">Appuie sur "Tirer" pour lancer un défi !</div>
+
+    <div id="avTargetDisplay" style="margin-bottom:12px;text-align:center;display:none">
+      <span style="background:rgba(200,255,87,0.15);color:var(--accent);padding:6px 16px;border-radius:20px;font-size:14px;font-family:var(--font-head);font-weight:700">
+        🎯 Pour : <span id="avTargetName"></span>
+      </span>
+    </div>
+
+    <button class="btn btn-primary" onclick="drawAV()">🎲 Tirer au hasard</button>
+  </div>
+
+  <!-- ==================== GAME: VRAI OU FAUX ==================== -->
+  <div class="screen" id="screen-anecdote">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Vrai ou Faux 🤔</div>
+    </div>
+
+    <!-- Phase: Submit -->
+    <div id="anecdote-phase-submit">
+      <div class="card">
+        <div class="card-title">Écris une anecdote sur toi</div>
+        <textarea id="anecdoteText" placeholder="Ex : J'ai déjà mangé un insecte entier…" rows="4" style="margin-bottom:12px;resize:none"></textarea>
+        <div class="av-category">
+          <div class="av-cat-btn active" id="an-true" onclick="setAnecdoteTruth(true)">✅ C'est vrai</div>
+          <div class="av-cat-btn" id="an-false" onclick="setAnecdoteTruth(false)">❌ C'est faux</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="submitAnecdote()">Envoyer ✓</button>
+      <div id="anecdoteWaiting" style="display:none;margin-top:12px" class="card text-center">
+        <p class="text-muted mb-16">En attente des autres joueurs…</p>
+        <div class="waiting-spinner">
+          <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase: Vote -->
+    <div id="anecdote-phase-vote" style="display:none">
+      <p style="text-align:center;font-family:var(--font-head);font-size:13px;color:var(--muted);margin-bottom:8px">Anecdote de <strong style="color:var(--accent)" id="anecdoteAuthor">?</strong></p>
+      <div class="anecdote-card" id="anecdoteDisplay"></div>
+      <div class="vf-btns">
+        <button class="vf-btn vf-true" onclick="voteAnecdote(true)">✅ VRAI</button>
+        <button class="vf-btn vf-false" onclick="voteAnecdote(false)">❌ FAUX</button>
+      </div>
+      <div id="anecdoteVoteWait" style="display:none;margin-top:12px" class="card text-center">
+        <p class="text-muted mb-16">En attente des autres…</p>
+        <div class="waiting-spinner">
+          <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase: Results -->
+    <div id="anecdote-phase-results" style="display:none">
+      <div class="card text-center">
+        <div id="anecdoteResultIcon" style="font-size:50px;margin-bottom:12px">🎉</div>
+        <div id="anecdoteResultText" style="font-family:var(--font-head);font-size:18px;font-weight:800;margin-bottom:8px"></div>
+        <p id="anecdoteResultSub" style="color:var(--muted);font-size:14px"></p>
+      </div>
+      <button class="btn btn-primary" onclick="nextAnecdote()" id="nextAnecdoteBtn">Anecdote suivante →</button>
+    </div>
+  </div>
+
+  <!-- ==================== GAME: PSEUDO ==================== -->
+  <div class="screen" id="screen-pseudo">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Pseudo 🏷️</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quel est le vrai pseudo de cette personne ?</div>
+      <div class="pseudo-reveal">
+        <div class="pseudo-big" id="pseudoReveal">???</div>
+        <div class="pseudo-sub" id="pseudoRevealSub">Appuie sur "Révéler" pour découvrir !</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Indices</div>
+      <div id="pseudoClues" style="color:var(--muted);font-size:14px;line-height:1.8">
+        — Aucun indice encore<br>
+        — Lance le jeu pour voir le pseudo d'un joueur
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="revealPseudo()">👁️ Révéler un pseudo</button>
+    <button class="btn btn-secondary" onclick="pseudoChallenge()" style="margin-top:10px">🎯 Défi pseudo</button>
+  </div>
+
+  <!-- ==================== GAME: GÉO ==================== -->
+  <div class="screen" id="screen-geo">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Géolocalisation 📍</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Où sont les joueurs ?</div>
+      <div id="geoPlayersList"></div>
+      <div id="geoStatus" class="text-muted" style="font-size:13px;text-align:center">Partage ta position pour apparaître !</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="shareLocation()">📍 Partager ma position</button>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Mini-défi géo</div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7" id="geoChallenge">
+        🎯 Trouve le joueur qui est le plus loin de toi !
+      </p>
+      <button class="btn btn-secondary" style="margin-top:12px" onclick="newGeoChallenge()">Nouveau défi 🎲</button>
+    </div>
+  </div>
+
+  <!-- ==================== SCORES ==================== -->
+  <div class="screen" id="screen-scores">
+    <div class="game-header">
+      <button class="back-btn" onclick="backToLobby()">←</button>
+      <div class="game-title">Classement 🏆</div>
+    </div>
+    <div class="card" id="scoresContent"></div>
+    <button class="btn btn-primary" onclick="backToLobby()">Retour au lobby</button>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ==================== MODAL REJOINDRE ==================== -->
+<div class="modal-overlay" id="joinModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Rejoindre une salle</div>
+    <input type="text" id="joinCodeInput" placeholder="Entre le code à 4 lettres…" maxlength="6" style="margin-bottom:16px;text-transform:uppercase;letter-spacing:4px;font-size:20px;font-family:var(--font-head);text-align:center;font-weight:700" />
+    <button class="btn btn-primary" onclick="joinRoom()">Rejoindre →</button>
+    <button class="btn btn-secondary" onclick="closeJoinModal()" style="margin-top:10px">Annuler</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  FIREBASE CONFIG — remplace par ta config Firebase ici !
+// ============================================================
+const firebaseConfig = {
+  apiKey: "REMPLACE_PAR_TON_API_KEY",
+  authDomain: "REMPLACE.firebaseapp.com",
+  databaseURL: "https://REMPLACE-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "REMPLACE",
+  storageBucket: "REMPLACE.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:0000000000000000000000"
+};
+
+let db, storage, firebaseReady = false;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  storage = firebase.storage();
+  firebaseReady = true;
+} catch(e) {
+  console.warn("Firebase non configuré, mode démo activé.");
+}
+
+// ============================================================
+//  STATE
+// ============================================================
+let state = {
+  playerId: generateId(8),
+  pseudo: '',
+  avatarData: null,
+  roomCode: null,
+  isHost: false,
+  players: {},
+  avLevel: 'soft',
+  avCategory: 'action',
+  anecdoteTruth: true,
+  currentPhotoIndex: 0,
+  selectedVote: null,
+  myVote: null,
+  geoCoords: null,
+  scores: {}
+};
+
+// ============================================================
+//  UTILS
+// ============================================================
+function generateId(len) {
+  return Math.random().toString(36).substring(2, 2+len).toUpperCase();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showToast(msg, duration=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function copyCode() {
+  const code = document.getElementById('roomCodeDisplay').textContent;
+  navigator.clipboard?.writeText(code).then(() => showToast('Code copié ! ' + code));
+}
+
+// ============================================================
+//  AVATAR UPLOAD
+// ============================================================
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    state.avatarData = ev.target.result;
+    const prev = document.getElementById('avatarPreview');
+    prev.src = ev.target.result;
+    prev.style.display = 'block';
+    document.getElementById('uploadIcon').textContent = '✅';
+    document.getElementById('uploadTxt').textContent = 'Photo ajoutée !';
+  };
+  reader.readAsDataURL(file);
+});
+
+// ============================================================
+//  ROOM CREATION
+// ============================================================
+function getPseudo() {
+  const p = document.getElementById('pseudoInput').value.trim();
+  if(!p) { showToast('⚠️ Entre ton pseudo !'); return null; }
+  return p;
+}
+
+function createRoom() {
+  const pseudo = getPseudo();
+  if(!pseudo) return;
+  state.pseudo = pseudo;
+  state.isHost = true;
+  state.roomCode = generateId(4);
+  state.players[state.playerId] = { pseudo, host: true, avatar: state.avatarData || null, online: true };
+
+  if(firebaseReady) {
+    db.ref('rooms/'+state.roomCode).set({
+      host: state.playerId,
+      game: null,
+      players: state.players,
+      created: Date.now()
+    }).then(() => {
+      listenRoom();
+      enterLobby();
+    });
+  } else {
+    enterLobby();
+  }
+}
+
+function showJoinModal() {
+  document.getElementById('joinModal').classList.add('open');
+}
+function closeJoinModal() {
+  document.getElementById('joinModal').classList.remove('open');
+}
+
+function joinRoom() {
+  const pseudo = getPseudo();
+  if(!pseudo) return;
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if(code.length < 4) { showToast('⚠️ Code invalide !'); return; }
+
+  state.pseudo = pseudo;
+  state.isHost = false;
+  state.roomCode = code;
+  state.players[state.playerId] = { pseudo, host: false, avatar: state.avatarData || null, online: true };
+
+  if(firebaseReady) {
+    const ref = db.ref('rooms/'+code);
+    ref.once('value').then(snap => {
+      if(!snap.exists()) { showToast('❌ Salle introuvable !'); return; }
+      ref.child('players/'+state.playerId).set(state.players[state.playerId]).then(() => {
+        listenRoom();
+        closeJoinModal();
+        enterLobby();
+      });
+    });
+  } else {
+    closeJoinModal();
+    enterLobby();
+  }
+}
+
+function leaveRoom() {
+  if(firebaseReady && state.roomCode) {
+    db.ref('rooms/'+state.roomCode+'/players/'+state.playerId).remove();
+  }
+  state.roomCode = null;
+  state.isHost = false;
+  state.players = {};
+  showScreen('home');
+}
+
+// ============================================================
+//  LOBBY
+// ============================================================
+function enterLobby() {
+  document.getElementById('roomCodeDisplay').textContent = state.roomCode;
+  document.getElementById('hostControls').style.display = state.isHost ? 'block' : 'none';
+  document.getElementById('guestWaiting').style.display = state.isHost ? 'none' : 'block';
+  renderPlayers();
+  showScreen('lobby');
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playersList');
+  list.innerHTML = '';
+  Object.entries(state.players).forEach(([id, p]) => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (p.host ? ' host' : '');
+    const avatarHtml = p.avatar
+      ? `<div class="avatar"><img src="${p.avatar}" /></div>`
+      : `<div class="avatar">${p.pseudo[0].toUpperCase()}</div>`;
+    chip.innerHTML = `${avatarHtml}<span>${p.pseudo}</span>${p.host ? '<span class="crown">👑</span>' : ''}`;
+    list.appendChild(chip);
+  });
+}
+
+function listenRoom() {
+  if(!firebaseReady) return;
+  const ref = db.ref('rooms/'+state.roomCode);
+
+  ref.child('players').on('value', snap => {
+    if(snap.val()) {
+      state.players = snap.val();
+      renderPlayers();
+    }
+  });
+
+  ref.child('game').on('value', snap => {
+    const game = snap.val();
+    if(game && !state.isHost) {
+      launchGame(game);
+    }
+  });
+}
+
+// ============================================================
+//  GAME LAUNCHER
+// ============================================================
+function startGame(game) {
+  if(firebaseReady && state.isHost) {
+    db.ref('rooms/'+state.roomCode+'/game').set(game);
+  }
+  launchGame(game);
+}
+
+function launchGame(game) {
+  switch(game) {
+    case 'photo': initPhotoRoulette(); showScreen('photo'); break;
+    case 'av': showScreen('av'); break;
+    case 'anecdote': initAnecdote(); showScreen('anecdote'); break;
+    case 'pseudo': showScreen('pseudo'); break;
+    case 'geo': initGeo(); showScreen('geo'); break;
+  }
+}
+
+function backToLobby() {
+  if(firebaseReady && state.isHost) {
+    db.ref('rooms/'+state.roomCode+'/game').set(null);
+  }
+  showScreen('lobby');
+}
+
+// ============================================================
+//  ACTION OU VÉRITÉ
+// ============================================================
+const avPrompts = {
+  action: {
+    soft: [
+      "Imite la personne à ta gauche pendant 30 secondes",
+      "Fais 10 pompes",
+      "Chante le refrain de la dernière chanson que tu as écoutée",
+      "Envoie un message gênant à quelqu'un dans ta galerie",
+      "Parle avec un accent anglais pendant 2 minutes",
+      "Fais rire quelqu'un dans le groupe en moins de 10 secondes",
+      "Appelle quelqu'un de ta famille et dis-lui que tu l'aimes",
+      "Dessine un autoportrait en 30 secondes",
+    ],
+    normal: [
+      "Fais une déclaration dramatique à la personne à ta droite",
+      "Laisse quelqu'un lire tes 5 derniers messages",
+      "Montre la dernière photo de ta galerie",
+      "Fais une danse aléatoire pendant 20 secondes",
+      "Envoie un message 'je pense à toi' à quelqu'un au hasard dans tes contacts",
+      "Lis à voix haute ton dernier SMS reçu",
+    ]
+  },
+  verite: {
+    soft: [
+      "Quelle est ta plus grande peur inavouée ?",
+      "Quel est ton film honteux préféré ?",
+      "À qui as-tu menti récemment ?",
+      "Quel est ton talent caché ?",
+      "Quelle est la chose la plus stupide que tu aies faite ?",
+      "Qui dans ce groupe t'énerve le plus parfois ?",
+      "C'est quoi ton plat honteux préféré ?",
+      "Tu as déjà piqué quelque chose quelque part ?",
+    ],
+    normal: [
+      "Quel est ton secret le plus gênant ?",
+      "Montre la photo la plus bizarre de ta galerie",
+      "Quelle est ta plus grosse erreur de ta vie ?",
+      "As-tu déjà eu un crush sur quelqu'un dans ce groupe ?",
+      "Quel est le mensonge le plus énorme que tu aies dit ?",
+      "Tu as déjà stalké un ex ? Raconte.",
+    ]
+  }
+};
+
+function setLevel(l) {
+  state.avLevel = l;
+  ['soft','normal'].forEach(x => {
+    document.getElementById('lvl-'+x).classList.toggle('active', x === l);
+    document.getElementById('ld'+(x==='soft'?1:2)).classList.toggle('active', x === l);
+  });
+}
+
+function setCategory(c) {
+  state.avCategory = c;
+  ['action','verite'].forEach(x => {
+    document.getElementById('cat-'+x).classList.toggle('active', x === c);
+  });
+}
+
+function drawAV() {
+  const prompts = avPrompts[state.avCategory][state.avLevel];
+  const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+  const display = document.getElementById('avPromptDisplay');
+  display.textContent = prompt;
+  display.classList.remove('empty');
+
+  // Pick random target player
+  const playerArr = Object.values(state.players);
+  const target = playerArr[Math.floor(Math.random() * playerArr.length)];
+  document.getElementById('avTargetDisplay').style.display = 'block';
+  document.getElementById('avTargetName').textContent = target.pseudo;
+}
+
+// ============================================================
+//  ANECDOTE VRAI / FAUX
+// ============================================================
+let anecdoteQueue = [];
+let currentAnecdoteIdx = 0;
+let anecdoteTruth = true;
+
+function setAnecdoteTruth(val) {
+  anecdoteTruth = val;
+  document.getElementById('an-true').classList.toggle('active', val);
+  document.getElementById('an-false').classList.toggle('active', !val);
+}
+
+function initAnecdote() {
+  anecdoteQueue = [];
+  currentAnecdoteIdx = 0;
+  document.getElementById('anecdote-phase-submit').style.display = 'block';
+  document.getElementById('anecdote-phase-vote').style.display = 'none';
+  document.getElementById('anecdote-phase-results').style.display = 'none';
+  document.getElementById('anecdoteWaiting').style.display = 'none';
+  document.getElementById('anecdoteText').value = '';
+}
+
+function submitAnecdote() {
+  const text = document.getElementById('anecdoteText').value.trim();
+  if(!text) { showToast('⚠️ Écris une anecdote !'); return; }
+
+  const anecdote = { text, truth: anecdoteTruth, author: state.pseudo, authorId: state.playerId };
+
+  if(firebaseReady && state.roomCode) {
+    db.ref('rooms/'+state.roomCode+'/anecdotes/'+state.playerId).set(anecdote).then(() => {
+      document.getElementById('anecdoteWaiting').style.display = 'block';
+      document.getElementById('anecdoteText').style.display = 'none';
+      // Host listens for all submissions and triggers vote
+      if(state.isHost) {
+        db.ref('rooms/'+state.roomCode+'/anecdotes').on('value', snap => {
+          const data = snap.val();
+          if(data && Object.keys(data).length >= Object.keys(state.players).length) {
+            anecdoteQueue = Object.values(data);
+            triggerAnecdoteVote();
+          }
+        });
+      }
+    });
+  } else {
+    // Demo mode: use a sample anecdote
+    anecdoteQueue = [
+      { text: text, truth: anecdoteTruth, author: state.pseudo, authorId: state.playerId },
+      { text: "J'ai une fois mangé un insecte par accident dans une salade et je n'ai rien dit", truth: true, author: 'Alex', authorId: 'demo1' }
+    ];
+    triggerAnecdoteVote();
+  }
+}
+
+function triggerAnecdoteVote() {
+  if(anecdoteQueue.length === 0) {
+    showToast('Plus d\'anecdotes !');
+    return;
+  }
+  const current = anecdoteQueue[currentAnecdoteIdx];
+  if(current.authorId === state.playerId) {
+    currentAnecdoteIdx++;
+    if(currentAnecdoteIdx >= anecdoteQueue.length) {
+      currentAnecdoteIdx = 0;
+    }
+    // Skip own anecdote if single player; otherwise move on
+    if(anecdoteQueue.length <= 1) {
+      showToast('Pas assez de joueurs pour voter !');
+      return;
+    }
+    triggerAnecdoteVote();
+    return;
+  }
+
+  document.getElementById('anecdote-phase-submit').style.display = 'none';
+  document.getElementById('anecdote-phase-vote').style.display = 'block';
+  document.getElementById('anecdoteAuthor').textContent = current.author;
+  document.getElementById('anecdoteDisplay').textContent = current.text;
+}
+
+function voteAnecdote(vote) {
+  const current = anecdoteQueue[currentAnecdoteIdx];
+  const correct = (vote === current.truth);
+
+  document.getElementById('anecdote-phase-vote').style.display = 'none';
+  document.getElementById('anecdote-phase-results').style.display = 'block';
+
+  if(correct) {
+    state.scores[state.playerId] = (state.scores[state.playerId] || 0) + 100;
+    document.getElementById('anecdoteResultIcon').textContent = '🎉';
+    document.getElementById('anecdoteResultText').textContent = 'Bonne réponse ! +100 pts';
+    document.getElementById('anecdoteResultSub').textContent = `C'était bien ${current.truth ? 'VRAI' : 'FAUX'} !`;
+  } else {
+    document.getElementById('anecdoteResultIcon').textContent = '😅';
+    document.getElementById('anecdoteResultText').textContent = 'Raté !';
+    document.getElementById('anecdoteResultSub').textContent = `C'était ${current.truth ? 'VRAI' : 'FAUX'} en réalité…`;
+  }
+}
+
+function nextAnecdote() {
+  currentAnecdoteIdx++;
+  if(currentAnecdoteIdx >= anecdoteQueue.length) {
+    showToast('Plus d\'anecdotes !');
+    backToLobby();
+    return;
+  }
+  document.getElementById('anecdote-phase-results').style.display = 'none';
+  triggerAnecdoteVote();
+}
+
+// ============================================================
+//  PHOTO ROULETTE
+// ============================================================
+let photoQueue = [];
+let currentPhotoIdx = 0;
+let selectedVoteId = null;
+
+function initPhotoRoulette() {
+  photoQueue = [];
+  currentPhotoIdx = 0;
+  selectedVoteId = null;
+  document.getElementById('photo-phase-upload').style.display = 'block';
+  document.getElementById('photo-phase-vote').style.display = 'none';
+  document.getElementById('photo-phase-results').style.display = 'none';
+  document.getElementById('waitingOthers').style.display = 'none';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('submitPhotoBtn').style.display = 'block';
+}
+
+document.getElementById('photoInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const prev = document.getElementById('photoPreview');
+    prev.src = ev.target.result;
+    prev.style.display = 'block';
+    state.myPhoto = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function submitPhoto() {
+  if(!state.myPhoto) { showToast('⚠️ Choisis une photo !'); return; }
+  document.getElementById('submitPhotoBtn').style.display = 'none';
+  document.getElementById('waitingOthers').style.display = 'block';
+
+  if(firebaseReady && state.roomCode) {
+    db.ref('rooms/'+state.roomCode+'/photos/'+state.playerId).set({
+      img: state.myPhoto,
+      author: state.pseudo,
+      authorId: state.playerId
+    }).then(() => {
+      if(state.isHost) {
+        db.ref('rooms/'+state.roomCode+'/photos').on('value', snap => {
+          const data = snap.val();
+          if(data && Object.keys(data).length >= Object.keys(state.players).length) {
+            photoQueue = Object.values(data);
+            triggerPhotoVote();
+          }
+        });
+      }
+    });
+  } else {
+    // Demo mode
+    photoQueue = [
+      { img: state.myPhoto, author: state.pseudo, authorId: state.playerId },
+      { img: 'https://via.placeholder.com/200', author: 'Alex', authorId: 'demo1' }
+    ];
+    setTimeout(() => triggerPhotoVote(), 1000);
+  }
+}
+
+function triggerPhotoVote() {
+  if(currentPhotoIdx >= photoQueue.length) {
+    showToast('Plus de photos !');
+    backToLobby();
+    return;
+  }
+  const current = photoQueue[currentPhotoIdx];
+  // Skip own photo
+  if(current.authorId === state.playerId) {
+    currentPhotoIdx++;
+    triggerPhotoVote();
+    return;
+  }
+
+  document.getElementById('photo-phase-upload').style.display = 'none';
+  document.getElementById('photo-phase-vote').style.display = 'block';
+
+  const photoDisplay = document.getElementById('photoDisplay');
+  photoDisplay.innerHTML = `<img src="${current.img}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+
+  // Build vote options
+  const voteOptions = document.getElementById('voteOptions');
+  voteOptions.innerHTML = '';
+  selectedVoteId = null;
+  document.getElementById('confirmVoteBtn').style.display = 'none';
+
+  Object.entries(state.players).forEach(([id, p]) => {
+    const btn = document.createElement('button');
+    btn.className = 'vote-btn';
+    btn.dataset.playerId = id;
+    btn.textContent = p.pseudo;
+    btn.onclick = () => selectVote(id, btn);
+    voteOptions.appendChild(btn);
+  });
+}
+
+function selectVote(id, btn) {
+  document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedVoteId = id;
+  document.getElementById('confirmVoteBtn').style.display = 'block';
+}
+
+function confirmVote() {
+  const current = photoQueue[currentPhotoIdx];
+  const correct = (selectedVoteId === current.authorId);
+
+  if(correct) {
+    state.scores[state.playerId] = (state.scores[state.playerId] || 0) + 150;
+  }
+
+  // Show results
+  document.getElementById('photo-phase-vote').style.display = 'none';
+  document.getElementById('photo-phase-results').style.display = 'block';
+
+  const list = document.getElementById('photoResultsList');
+  list.innerHTML = `
+    <div style="font-size:50px;margin-bottom:12px">${correct ? '🎉' : '😅'}</div>
+    <div style="font-family:var(--font-head);font-size:18px;font-weight:800;margin-bottom:8px">
+      ${correct ? 'Bonne réponse ! +150 pts' : 'Raté !'}
+    </div>
+    <p style="color:var(--muted);font-size:14px">C'était la photo de <strong style="color:var(--accent)">${current.author}</strong></p>
+  `;
+}
+
+function nextPhotoRound() {
+  currentPhotoIdx++;
+  document.getElementById('photo-phase-results').style.display = 'none';
+  triggerPhotoVote();
+}
+
+// ============================================================
+//  PSEUDO GAME
+// ============================================================
+function revealPseudo() {
+  const players = Object.values(state.players);
+  const random = players[Math.floor(Math.random() * players.length)];
+  document.getElementById('pseudoReveal').textContent = random.pseudo;
+  document.getElementById('pseudoRevealSub').textContent = `C'est le pseudo de ce joueur dans ce groupe !`;
+
+  // Fake clues
+  const clues = [
+    `— Pseudo depuis ${Math.floor(Math.random()*10)+1} ans`,
+    `— Contient ${random.pseudo.length} lettres`,
+    `— Commence par "${random.pseudo[0].toUpperCase()}"`,
+  ];
+  document.getElementById('pseudoClues').innerHTML = clues.join('<br>');
+}
+
+function pseudoChallenge() {
+  const players = Object.values(state.players);
+  if(players.length < 2) { showToast('⚠️ Besoin de 2 joueurs min !'); return; }
+  const p1 = players[Math.floor(Math.random() * players.length)];
+  const p2 = players[Math.floor(Math.random() * players.length)];
+  showToast(`🎯 ${p1.pseudo} doit deviner le pseudo d'enfance de ${p2.pseudo} !`);
+}
+
+// ============================================================
+//  GÉO
+// ============================================================
+const geoChallenges = [
+  "🎯 Trouve le joueur qui est le plus loin de toi !",
+  "🏃 Qui est à moins de 500m de toi ?",
+  "🗺️ Devine la ville d'un autre joueur !",
+  "📏 Estime la distance entre toi et l'hôte en km",
+  "🌍 Quel joueur est dans une autre région ?",
+];
+
+function initGeo() {
+  document.getElementById('geoPlayersList').innerHTML = '';
+  document.getElementById('geoChallenge').textContent = geoChallenges[0];
+}
+
+function newGeoChallenge() {
+  const c = geoChallenges[Math.floor(Math.random() * geoChallenges.length)];
+  document.getElementById('geoChallenge').textContent = c;
+}
+
+function shareLocation() {
+  if(!navigator.geolocation) { showToast('❌ Géolocalisation non supportée'); return; }
+  showToast('📍 Localisation en cours…');
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    state.geoCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
+    if(firebaseReady && state.roomCode) {
+      db.ref('rooms/'+state.roomCode+'/geo/'+state.playerId).set({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        pseudo: state.pseudo
+      }).then(() => {
+        showToast('✅ Position partagée !');
+        listenGeo();
+      });
+    } else {
+      showToast('✅ Position partagée (démo) !');
+      renderGeoPlayers({ [state.playerId]: { lat: pos.coords.latitude, lng: pos.coords.longitude, pseudo: state.pseudo } });
+    }
+  }, () => {
+    showToast('❌ Accès refusé à la géoloc');
+  });
+}
+
+function listenGeo() {
+  if(!firebaseReady) return;
+  db.ref('rooms/'+state.roomCode+'/geo').on('value', snap => {
+    if(snap.val()) renderGeoPlayers(snap.val());
+  });
+}
+
+function renderGeoPlayers(data) {
+  const list = document.getElementById('geoPlayersList');
+  list.innerHTML = '';
+  Object.entries(data).forEach(([id, g]) => {
+    let dist = '';
+    if(state.geoCoords && id !== state.playerId) {
+      const d = haversine(state.geoCoords.lat, state.geoCoords.lng, g.lat, g.lng);
+      dist = d < 1 ? `${Math.round(d*1000)}m` : `${d.toFixed(1)}km`;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'geo-player-item';
+    item.innerHTML = `
+      <div class="geo-icon">📍</div>
+      <div class="geo-info">
+        <div class="geo-name">${g.pseudo}</div>
+        ${dist ? `<div class="geo-dist">À ${dist} de toi</div>` : '<div class="geo-dist">Position partagée</div>'}
+      </div>
+      <div class="geo-badge">EN LIGNE</div>
+    `;
+    list.appendChild(item);
+  });
+  document.getElementById('geoStatus').style.display = 'none';
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ============================================================
+//  SCORES
+// ============================================================
+function showScores() {
+  const sorted = Object.entries(state.players)
+    .map(([id, p]) => ({ ...p, id, score: state.scores[id] || 0 }))
+    .sort((a,b) => b.score - a.score);
+
+  const medals = ['gold','silver','bronze'];
+  const content = document.getElementById('scoresContent');
+  content.innerHTML = '<div class="card-title" style="margin-bottom:16px">Classement final</div>';
+
+  sorted.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    const rankClass = medals[i] || '';
+    row.innerHTML = `
+      <div class="score-rank ${rankClass}">${['🥇','🥈','🥉'][i] || (i+1)}</div>
+      <div style="flex:1;font-weight:500">${p.pseudo}</div>
+      <div class="score-pts">${p.score} pts</div>
+    `;
+    content.appendChild(row);
+  });
+
+  showScreen('scores');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+// Demo mode: if Firebase not configured, show a banner
+window.addEventListener('DOMContentLoaded', () => {
+  if(!firebaseReady) {
+    const notice = document.createElement('div');
+    notice.style.cssText = `position:fixed;top:0;left:0;right:0;background:rgba(255,77,166,0.15);border-bottom:1px solid rgba(255,77,166,0.3);padding:10px 16px;font-size:12px;color:var(--accent2);font-family:var(--font-head);text-align:center;z-index:50;font-weight:700`;
+    notice.textContent = '⚠️ Mode démo — Configure Firebase pour le multijoueur en ligne';
+    document.body.appendChild(notice);
+    document.getElementById('app').style.paddingTop = '52px';
+  }
+});
+</script>
+</body>
+</html>
