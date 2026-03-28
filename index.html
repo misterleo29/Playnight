@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NightPlay — Party Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
- 
+
   <!-- Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
- 
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+
   <style>
     :root {
       --bg: #090910;
@@ -26,9 +26,9 @@
       --font-head: 'Syne', sans-serif;
       --font-body: 'DM Sans', sans-serif;
     }
- 
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -36,7 +36,7 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
- 
+
     /* Background blobs */
     .blob {
       position: fixed;
@@ -49,7 +49,7 @@
     .blob-1 { width: 500px; height: 500px; background: var(--accent2); top: -150px; left: -150px; }
     .blob-2 { width: 400px; height: 400px; background: var(--accent); bottom: -100px; right: -100px; }
     .blob-3 { width: 300px; height: 300px; background: var(--accent3); top: 50%; left: 50%; transform: translate(-50%,-50%); }
- 
+
     #app {
       position: relative;
       z-index: 1;
@@ -60,11 +60,11 @@
       display: flex;
       flex-direction: column;
     }
- 
+
     /* ===== SCREENS ===== */
     .screen { display: none; flex-direction: column; flex: 1; }
     .screen.active { display: flex; }
- 
+
     /* ===== HEADER ===== */
     .logo {
       font-family: var(--font-head);
@@ -83,7 +83,7 @@
       text-transform: uppercase;
       margin-bottom: 48px;
     }
- 
+
     /* ===== CARDS ===== */
     .card {
       background: var(--card);
@@ -102,7 +102,7 @@
       color: var(--muted);
       margin-bottom: 16px;
     }
- 
+
     /* ===== INPUTS ===== */
     input, textarea {
       width: 100%;
@@ -118,7 +118,7 @@
     }
     input:focus, textarea:focus { border-color: var(--accent); }
     input::placeholder, textarea::placeholder { color: var(--muted); }
- 
+
     /* ===== BUTTONS ===== */
     .btn {
       width: 100%;
@@ -164,9 +164,9 @@
       color: #090910;
     }
     .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(92,225,255,0.3); }
- 
+
     .btn + .btn { margin-top: 10px; }
- 
+
     /* ===== BADGE CODE ===== */
     .room-code-badge {
       background: var(--accent);
@@ -183,7 +183,7 @@
       transition: transform 0.1s;
     }
     .room-code-badge:active { transform: scale(0.97); }
- 
+
     /* ===== PLAYERS LIST ===== */
     .players-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
     .player-chip {
@@ -213,7 +213,7 @@
     .player-chip .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .player-chip.host { border-color: var(--accent); }
     .crown { font-size: 11px; }
- 
+
     /* ===== GAME MENU ===== */
     .game-grid {
       display: grid;
@@ -234,7 +234,7 @@
     .game-btn:hover { border-color: var(--accent); background: rgba(200,255,87,0.05); transform: translateY(-2px); }
     .game-btn .icon { font-size: 28px; margin-bottom: 8px; }
     .game-btn .label { font-family: var(--font-head); font-size: 13px; font-weight: 700; }
- 
+
     /* ===== GAME SCREEN ===== */
     .game-header {
       display: flex;
@@ -261,7 +261,7 @@
       font-size: 18px;
       flex-shrink: 0;
     }
- 
+
     /* ===== PHOTO ROULETTE ===== */
     .photo-box {
       width: 200px;
@@ -294,7 +294,7 @@
     .vote-btn.selected { border-color: var(--accent); background: rgba(200,255,87,0.1); }
     .vote-btn.correct { border-color: var(--accent); background: rgba(200,255,87,0.2); }
     .vote-btn.wrong { border-color: var(--accent2); background: rgba(255,77,166,0.15); opacity: 0.6; }
- 
+
     /* ===== VRAI/FAUX ===== */
     .anecdote-card {
       background: rgba(255,255,255,0.05);
@@ -324,7 +324,7 @@
     .vf-btn:hover { transform: scale(1.03); }
     .vf-true { background: var(--accent); color: #090910; }
     .vf-false { background: var(--accent2); color: white; }
- 
+
     /* ===== ACTION VÉRITÉ ===== */
     .av-category {
       display: grid;
@@ -374,7 +374,7 @@
       transition: background 0.2s;
     }
     .level-dot.active { background: var(--accent2); }
- 
+
     /* ===== GÉOLOC ===== */
     .geo-player-item {
       display: flex;
@@ -397,7 +397,7 @@
       color: var(--accent3);
       font-weight: 600;
     }
- 
+
     /* ===== PSEUDO ===== */
     .pseudo-reveal {
       text-align: center;
@@ -411,7 +411,7 @@
       margin-bottom: 8px;
     }
     .pseudo-sub { color: var(--muted); font-size: 14px; }
- 
+
     /* ===== NOTIFICATION ===== */
     .toast {
       position: fixed;
@@ -430,7 +430,7 @@
       white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
- 
+
     /* ===== WAITING ===== */
     .waiting-spinner {
       display: flex;
@@ -451,7 +451,7 @@
       0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
       40% { opacity: 1; transform: scale(1.2); }
     }
- 
+
     /* ===== SCORE ===== */
     .score-row {
       display: flex;
@@ -467,7 +467,7 @@
     .score-rank.silver { color: #c0c0c0; }
     .score-rank.bronze { color: #cd7f32; }
     .score-pts { font-family: var(--font-head); font-weight: 800; font-size: 18px; color: var(--accent); }
- 
+
     /* ===== PHOTO UPLOAD ===== */
     .upload-zone {
       border: 2px dashed var(--border);
@@ -489,7 +489,7 @@
       border-radius: 12px;
       margin-bottom: 12px;
     }
- 
+
     /* ===== SETUP SCREEN ===== */
     .setup-notice {
       background: rgba(255,77,166,0.08);
@@ -507,7 +507,7 @@
       font-size: 12px;
       color: var(--accent3);
     }
- 
+
     /* ===== MISC ===== */
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
     .text-center { text-align: center; }
@@ -515,7 +515,7 @@
     .mb-16 { margin-bottom: 16px; }
     .mt-8 { margin-top: 8px; }
     .flex-center { display: flex; justify-content: center; align-items: center; }
- 
+
     /* Fade in */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -525,7 +525,7 @@
     .screen.active > *:nth-child(2) { animation-delay: 0.05s; }
     .screen.active > *:nth-child(3) { animation-delay: 0.1s; }
     .screen.active > *:nth-child(4) { animation-delay: 0.15s; }
- 
+
     /* ===== MODAL ===== */
     .modal-overlay {
       position: fixed;
@@ -566,28 +566,28 @@
   </style>
 </head>
 <body>
- 
+
 <!-- BG Blobs -->
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
 <div class="blob blob-3"></div>
- 
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
- 
+
 <!-- APP -->
 <div id="app">
- 
+
   <!-- ==================== HOME ==================== -->
   <div class="screen active" id="screen-home">
     <div class="logo">Night<span>Play</span></div>
     <div class="tagline">Party Game · En ligne</div>
- 
+
     <div class="card">
       <div class="card-title">Ton pseudo</div>
       <input type="text" id="pseudoInput" placeholder="Entre ton pseudo…" maxlength="20" />
     </div>
- 
+
     <div class="card">
       <div class="card-title">Ta photo (optionnel)</div>
       <div class="upload-zone" onclick="document.getElementById('avatarInput').click()">
@@ -597,14 +597,14 @@
       </div>
       <input type="file" id="avatarInput" accept="image/*" style="display:none" />
     </div>
- 
+
     <button class="btn btn-primary" onclick="createRoom()">✦ Créer une salle</button>
     <button class="btn btn-secondary" onclick="showJoinModal()">Rejoindre une salle</button>
- 
+
     <div class="divider"></div>
     <p class="text-center text-muted">NightPlay v1.0 — Jeux en soirée 🎉</p>
   </div>
- 
+
   <!-- ==================== LOBBY ==================== -->
   <div class="screen" id="screen-lobby">
     <div style="text-align:center;margin-bottom:8px">
@@ -612,7 +612,7 @@
     </div>
     <div class="room-code-badge" id="roomCodeDisplay" onclick="copyCode()">……</div>
     <p class="text-center text-muted mb-16" style="font-size:12px">Appuie pour copier le code</p>
- 
+
     <div class="card">
       <div class="card-title">Joueurs connectés</div>
       <div class="players-list" id="playersList"></div>
@@ -620,7 +620,7 @@
         <div class="dot-pulse"></div><div class="dot-pulse"></div><div class="dot-pulse"></div>
       </div>
     </div>
- 
+
     <div id="hostControls" style="display:none">
       <div class="card">
         <div class="card-title">Choisir un mini-jeu</div>
@@ -652,7 +652,7 @@
         </div>
       </div>
     </div>
- 
+
     <div id="guestWaiting" style="display:none">
       <div class="card text-center">
         <p class="text-muted" style="margin-bottom:12px">En attente que l'hôte lance un jeu…</p>
@@ -661,17 +661,17 @@
         </div>
       </div>
     </div>
- 
+
     <button class="btn btn-secondary" onclick="leaveRoom()" style="margin-top:12px">Quitter la salle</button>
   </div>
- 
+
   <!-- ==================== GAME: PHOTO ROULETTE ==================== -->
   <div class="screen" id="screen-photo">
     <div class="game-header">
       <button class="back-btn" onclick="backToLobby()">←</button>
       <div class="game-title">Photo Roulette 📸</div>
     </div>
- 
+
     <!-- Phase 1: Upload -->
     <div id="photo-phase-upload">
       <div class="card">
@@ -691,7 +691,7 @@
         </div>
       </div>
     </div>
- 
+
     <!-- Phase 2: Vote -->
     <div id="photo-phase-vote" style="display:none">
       <div class="photo-box" id="photoDisplay">❓</div>
@@ -701,7 +701,7 @@
         <button class="btn btn-primary" id="confirmVoteBtn" onclick="confirmVote()" style="margin-top:16px;display:none">Confirmer mon vote ✓</button>
       </div>
     </div>
- 
+
     <!-- Phase 3: Results -->
     <div id="photo-phase-results" style="display:none">
       <div class="card text-center">
@@ -712,14 +712,14 @@
       <button class="btn btn-primary" onclick="nextPhotoRound()" id="nextPhotoBtn">Photo suivante →</button>
     </div>
   </div>
- 
+
   <!-- ==================== GAME: ACTION OU VÉRITÉ ==================== -->
   <div class="screen" id="screen-av">
     <div class="game-header">
       <button class="back-btn" onclick="backToLobby()">←</button>
       <div class="game-title">Action / Vérité 🎲</div>
     </div>
- 
+
     <div class="card">
       <div class="card-title">Intensité</div>
       <div class="av-category">
@@ -731,7 +731,7 @@
         <div class="level-dot" id="ld2"></div>
       </div>
     </div>
- 
+
     <div class="card">
       <div class="card-title">Catégorie</div>
       <div class="av-category">
@@ -739,25 +739,25 @@
         <div class="av-cat-btn" id="cat-verite" onclick="setCategory('verite')">💬 Vérité</div>
       </div>
     </div>
- 
+
     <div class="prompt-display empty" id="avPromptDisplay">Appuie sur "Tirer" pour lancer un défi !</div>
- 
+
     <div id="avTargetDisplay" style="margin-bottom:12px;text-align:center;display:none">
       <span style="background:rgba(200,255,87,0.15);color:var(--accent);padding:6px 16px;border-radius:20px;font-size:14px;font-family:var(--font-head);font-weight:700">
         🎯 Pour : <span id="avTargetName"></span>
       </span>
     </div>
- 
+
     <button class="btn btn-primary" onclick="drawAV()">🎲 Tirer au hasard</button>
   </div>
- 
+
   <!-- ==================== GAME: VRAI OU FAUX ==================== -->
   <div class="screen" id="screen-anecdote">
     <div class="game-header">
       <button class="back-btn" onclick="backToLobby()">←</button>
       <div class="game-title">Vrai ou Faux 🤔</div>
     </div>
- 
+
     <!-- Phase: Submit -->
     <div id="anecdote-phase-submit">
       <div class="card">
@@ -776,7 +776,7 @@
         </div>
       </div>
     </div>
- 
+
     <!-- Phase: Vote -->
     <div id="anecdote-phase-vote" style="display:none">
       <p style="text-align:center;font-family:var(--font-head);font-size:13px;color:var(--muted);margin-bottom:8px">Anecdote de <strong style="color:var(--accent)" id="anecdoteAuthor">?</strong></p>
@@ -792,7 +792,7 @@
         </div>
       </div>
     </div>
- 
+
     <!-- Phase: Results -->
     <div id="anecdote-phase-results" style="display:none">
       <div class="card text-center">
@@ -803,14 +803,14 @@
       <button class="btn btn-primary" onclick="nextAnecdote()" id="nextAnecdoteBtn">Anecdote suivante →</button>
     </div>
   </div>
- 
+
   <!-- ==================== GAME: PSEUDO ==================== -->
   <div class="screen" id="screen-pseudo">
     <div class="game-header">
       <button class="back-btn" onclick="backToLobby()">←</button>
       <div class="game-title">Pseudo 🏷️</div>
     </div>
- 
+
     <div class="card">
       <div class="card-title">Quel est le vrai pseudo de cette personne ?</div>
       <div class="pseudo-reveal">
@@ -818,7 +818,7 @@
         <div class="pseudo-sub" id="pseudoRevealSub">Appuie sur "Révéler" pour découvrir !</div>
       </div>
     </div>
- 
+
     <div class="card">
       <div class="card-title">Indices</div>
       <div id="pseudoClues" style="color:var(--muted);font-size:14px;line-height:1.8">
@@ -826,26 +826,26 @@
         — Lance le jeu pour voir le pseudo d'un joueur
       </div>
     </div>
- 
+
     <button class="btn btn-primary" onclick="revealPseudo()">👁️ Révéler un pseudo</button>
     <button class="btn btn-secondary" onclick="pseudoChallenge()" style="margin-top:10px">🎯 Défi pseudo</button>
   </div>
- 
+
   <!-- ==================== GAME: GÉO ==================== -->
   <div class="screen" id="screen-geo">
     <div class="game-header">
       <button class="back-btn" onclick="backToLobby()">←</button>
       <div class="game-title">Géolocalisation 📍</div>
     </div>
- 
+
     <div class="card">
       <div class="card-title">Où sont les joueurs ?</div>
       <div id="geoPlayersList"></div>
       <div id="geoStatus" class="text-muted" style="font-size:13px;text-align:center">Partage ta position pour apparaître !</div>
     </div>
- 
+
     <button class="btn btn-primary" onclick="shareLocation()">📍 Partager ma position</button>
- 
+
     <div class="card" style="margin-top:16px">
       <div class="card-title">Mini-défi géo</div>
       <p style="font-size:14px;color:var(--muted);line-height:1.7" id="geoChallenge">
@@ -854,7 +854,7 @@
       <button class="btn btn-secondary" style="margin-top:12px" onclick="newGeoChallenge()">Nouveau défi 🎲</button>
     </div>
   </div>
- 
+
   <!-- ==================== SCORES ==================== -->
   <div class="screen" id="screen-scores">
     <div class="game-header">
@@ -864,9 +864,9 @@
     <div class="card" id="scoresContent"></div>
     <button class="btn btn-primary" onclick="backToLobby()">Retour au lobby</button>
   </div>
- 
+
 </div><!-- #app -->
- 
+
 <!-- ==================== MODAL REJOINDRE ==================== -->
 <div class="modal-overlay" id="joinModal">
   <div class="modal-box">
@@ -877,7 +877,7 @@
     <button class="btn btn-secondary" onclick="closeJoinModal()" style="margin-top:10px">Annuler</button>
   </div>
 </div>
- 
+
 <script>
 // ============================================================
 //  FIREBASE CONFIG
@@ -892,19 +892,19 @@ const firebaseConfig = {
   appId: "1:553304934009:web:d9b2cdd182fa8bd748b6a8",
   measurementId: "G-0MSHMWQYMH"
 };
- 
+
 let db, storage, firebaseReady = false;
- 
+
 try {
   firebase.initializeApp(firebaseConfig);
-  db = firebase.database(firebase.app(), "https://nightplay-46382-default-rtdb.europe-west1.firebasedatabase.app/");
+  db = firebase.app().database("https://nightplay-46382-default-rtdb.europe-west1.firebasedatabase.app/");
   storage = firebase.storage();
   firebaseReady = true;
-  console.log('✅ Firebase initialisé OK');
+  console.log('✅ Firebase initialisé OK, db:', db.app.options.databaseURL);
 } catch(e) {
   console.warn("Firebase non configuré, mode démo activé.", e);
 }
- 
+
 // ============================================================
 //  STATE
 // ============================================================
@@ -924,32 +924,32 @@ let state = {
   geoCoords: null,
   scores: {}
 };
- 
+
 // ============================================================
 //  UTILS
 // ============================================================
 function generateId(len) {
   return Math.random().toString(36).substring(2, 2+len).toUpperCase();
 }
- 
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   window.scrollTo(0,0);
 }
- 
+
 function showToast(msg, duration=2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), duration);
 }
- 
+
 function copyCode() {
   const code = document.getElementById('roomCodeDisplay').textContent;
   navigator.clipboard?.writeText(code).then(() => showToast('Code copié ! ' + code));
 }
- 
+
 // ============================================================
 //  AVATAR UPLOAD
 // ============================================================
@@ -967,7 +967,7 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
   };
   reader.readAsDataURL(file);
 });
- 
+
 // ============================================================
 //  ROOM CREATION
 // ============================================================
@@ -976,7 +976,7 @@ function getPseudo() {
   if(!p) { showToast('⚠️ Entre ton pseudo !'); return null; }
   return p;
 }
- 
+
 function createRoom() {
   const pseudo = getPseudo();
   if(!pseudo) return;
@@ -984,7 +984,7 @@ function createRoom() {
   state.isHost = true;
   state.roomCode = generateId(4);
   state.players[state.playerId] = { pseudo, host: true, avatar: state.avatarData || null, online: true };
- 
+
   if(firebaseReady) {
     showToast('⏳ Connexion…');
     db.ref('rooms/'+state.roomCode).set({
@@ -1003,25 +1003,25 @@ function createRoom() {
     enterLobby();
   }
 }
- 
+
 function showJoinModal() {
   document.getElementById('joinModal').classList.add('open');
 }
 function closeJoinModal() {
   document.getElementById('joinModal').classList.remove('open');
 }
- 
+
 function joinRoom() {
   const pseudo = getPseudo();
   if(!pseudo) return;
   const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
   if(code.length < 4) { showToast('⚠️ Code invalide !'); return; }
- 
+
   state.pseudo = pseudo;
   state.isHost = false;
   state.roomCode = code;
   state.players[state.playerId] = { pseudo, host: false, avatar: state.avatarData || null, online: true };
- 
+
   if(firebaseReady) {
     const ref = db.ref('rooms/'+code);
     ref.once('value').then(snap => {
@@ -1037,7 +1037,7 @@ function joinRoom() {
     enterLobby();
   }
 }
- 
+
 function leaveRoom() {
   if(firebaseReady && state.roomCode) {
     db.ref('rooms/'+state.roomCode+'/players/'+state.playerId).remove();
@@ -1047,7 +1047,7 @@ function leaveRoom() {
   state.players = {};
   showScreen('home');
 }
- 
+
 // ============================================================
 //  LOBBY
 // ============================================================
@@ -1058,7 +1058,7 @@ function enterLobby() {
   renderPlayers();
   showScreen('lobby');
 }
- 
+
 function renderPlayers() {
   const list = document.getElementById('playersList');
   list.innerHTML = '';
@@ -1072,18 +1072,18 @@ function renderPlayers() {
     list.appendChild(chip);
   });
 }
- 
+
 function listenRoom() {
   if(!firebaseReady) return;
   const ref = db.ref('rooms/'+state.roomCode);
- 
+
   ref.child('players').on('value', snap => {
     if(snap.val()) {
       state.players = snap.val();
       renderPlayers();
     }
   });
- 
+
   ref.child('game').on('value', snap => {
     const game = snap.val();
     if(game && !state.isHost) {
@@ -1091,7 +1091,7 @@ function listenRoom() {
     }
   });
 }
- 
+
 // ============================================================
 //  GAME LAUNCHER
 // ============================================================
@@ -1101,7 +1101,7 @@ function startGame(game) {
   }
   launchGame(game);
 }
- 
+
 function launchGame(game) {
   switch(game) {
     case 'photo': initPhotoRoulette(); showScreen('photo'); break;
@@ -1111,14 +1111,14 @@ function launchGame(game) {
     case 'geo': initGeo(); showScreen('geo'); break;
   }
 }
- 
+
 function backToLobby() {
   if(firebaseReady && state.isHost) {
     db.ref('rooms/'+state.roomCode+'/game').set(null);
   }
   showScreen('lobby');
 }
- 
+
 // ============================================================
 //  ACTION OU VÉRITÉ
 // ============================================================
@@ -1164,7 +1164,7 @@ const avPrompts = {
     ]
   }
 };
- 
+
 function setLevel(l) {
   state.avLevel = l;
   ['soft','normal'].forEach(x => {
@@ -1172,41 +1172,41 @@ function setLevel(l) {
     document.getElementById('ld'+(x==='soft'?1:2)).classList.toggle('active', x === l);
   });
 }
- 
+
 function setCategory(c) {
   state.avCategory = c;
   ['action','verite'].forEach(x => {
     document.getElementById('cat-'+x).classList.toggle('active', x === c);
   });
 }
- 
+
 function drawAV() {
   const prompts = avPrompts[state.avCategory][state.avLevel];
   const prompt = prompts[Math.floor(Math.random() * prompts.length)];
   const display = document.getElementById('avPromptDisplay');
   display.textContent = prompt;
   display.classList.remove('empty');
- 
+
   // Pick random target player
   const playerArr = Object.values(state.players);
   const target = playerArr[Math.floor(Math.random() * playerArr.length)];
   document.getElementById('avTargetDisplay').style.display = 'block';
   document.getElementById('avTargetName').textContent = target.pseudo;
 }
- 
+
 // ============================================================
 //  ANECDOTE VRAI / FAUX
 // ============================================================
 let anecdoteQueue = [];
 let currentAnecdoteIdx = 0;
 let anecdoteTruth = true;
- 
+
 function setAnecdoteTruth(val) {
   anecdoteTruth = val;
   document.getElementById('an-true').classList.toggle('active', val);
   document.getElementById('an-false').classList.toggle('active', !val);
 }
- 
+
 function initAnecdote() {
   anecdoteQueue = [];
   currentAnecdoteIdx = 0;
@@ -1216,13 +1216,13 @@ function initAnecdote() {
   document.getElementById('anecdoteWaiting').style.display = 'none';
   document.getElementById('anecdoteText').value = '';
 }
- 
+
 function submitAnecdote() {
   const text = document.getElementById('anecdoteText').value.trim();
   if(!text) { showToast('⚠️ Écris une anecdote !'); return; }
- 
+
   const anecdote = { text, truth: anecdoteTruth, author: state.pseudo, authorId: state.playerId };
- 
+
   if(firebaseReady && state.roomCode) {
     db.ref('rooms/'+state.roomCode+'/anecdotes/'+state.playerId).set(anecdote).then(() => {
       document.getElementById('anecdoteWaiting').style.display = 'block';
@@ -1247,7 +1247,7 @@ function submitAnecdote() {
     triggerAnecdoteVote();
   }
 }
- 
+
 function triggerAnecdoteVote() {
   if(anecdoteQueue.length === 0) {
     showToast('Plus d\'anecdotes !');
@@ -1267,20 +1267,20 @@ function triggerAnecdoteVote() {
     triggerAnecdoteVote();
     return;
   }
- 
+
   document.getElementById('anecdote-phase-submit').style.display = 'none';
   document.getElementById('anecdote-phase-vote').style.display = 'block';
   document.getElementById('anecdoteAuthor').textContent = current.author;
   document.getElementById('anecdoteDisplay').textContent = current.text;
 }
- 
+
 function voteAnecdote(vote) {
   const current = anecdoteQueue[currentAnecdoteIdx];
   const correct = (vote === current.truth);
- 
+
   document.getElementById('anecdote-phase-vote').style.display = 'none';
   document.getElementById('anecdote-phase-results').style.display = 'block';
- 
+
   if(correct) {
     state.scores[state.playerId] = (state.scores[state.playerId] || 0) + 100;
     document.getElementById('anecdoteResultIcon').textContent = '🎉';
@@ -1292,7 +1292,7 @@ function voteAnecdote(vote) {
     document.getElementById('anecdoteResultSub').textContent = `C'était ${current.truth ? 'VRAI' : 'FAUX'} en réalité…`;
   }
 }
- 
+
 function nextAnecdote() {
   currentAnecdoteIdx++;
   if(currentAnecdoteIdx >= anecdoteQueue.length) {
@@ -1303,14 +1303,14 @@ function nextAnecdote() {
   document.getElementById('anecdote-phase-results').style.display = 'none';
   triggerAnecdoteVote();
 }
- 
+
 // ============================================================
 //  PHOTO ROULETTE
 // ============================================================
 let photoQueue = [];
 let currentPhotoIdx = 0;
 let selectedVoteId = null;
- 
+
 function initPhotoRoulette() {
   photoQueue = [];
   currentPhotoIdx = 0;
@@ -1322,7 +1322,7 @@ function initPhotoRoulette() {
   document.getElementById('photoPreview').style.display = 'none';
   document.getElementById('submitPhotoBtn').style.display = 'block';
 }
- 
+
 document.getElementById('photoInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(!file) return;
@@ -1335,12 +1335,12 @@ document.getElementById('photoInput').addEventListener('change', function(e) {
   };
   reader.readAsDataURL(file);
 });
- 
+
 function submitPhoto() {
   if(!state.myPhoto) { showToast('⚠️ Choisis une photo !'); return; }
   document.getElementById('submitPhotoBtn').style.display = 'none';
   document.getElementById('waitingOthers').style.display = 'block';
- 
+
   if(firebaseReady && state.roomCode) {
     db.ref('rooms/'+state.roomCode+'/photos/'+state.playerId).set({
       img: state.myPhoto,
@@ -1366,7 +1366,7 @@ function submitPhoto() {
     setTimeout(() => triggerPhotoVote(), 1000);
   }
 }
- 
+
 function triggerPhotoVote() {
   if(currentPhotoIdx >= photoQueue.length) {
     showToast('Plus de photos !');
@@ -1380,19 +1380,19 @@ function triggerPhotoVote() {
     triggerPhotoVote();
     return;
   }
- 
+
   document.getElementById('photo-phase-upload').style.display = 'none';
   document.getElementById('photo-phase-vote').style.display = 'block';
- 
+
   const photoDisplay = document.getElementById('photoDisplay');
   photoDisplay.innerHTML = `<img src="${current.img}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
- 
+
   // Build vote options
   const voteOptions = document.getElementById('voteOptions');
   voteOptions.innerHTML = '';
   selectedVoteId = null;
   document.getElementById('confirmVoteBtn').style.display = 'none';
- 
+
   Object.entries(state.players).forEach(([id, p]) => {
     const btn = document.createElement('button');
     btn.className = 'vote-btn';
@@ -1402,26 +1402,26 @@ function triggerPhotoVote() {
     voteOptions.appendChild(btn);
   });
 }
- 
+
 function selectVote(id, btn) {
   document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedVoteId = id;
   document.getElementById('confirmVoteBtn').style.display = 'block';
 }
- 
+
 function confirmVote() {
   const current = photoQueue[currentPhotoIdx];
   const correct = (selectedVoteId === current.authorId);
- 
+
   if(correct) {
     state.scores[state.playerId] = (state.scores[state.playerId] || 0) + 150;
   }
- 
+
   // Show results
   document.getElementById('photo-phase-vote').style.display = 'none';
   document.getElementById('photo-phase-results').style.display = 'block';
- 
+
   const list = document.getElementById('photoResultsList');
   list.innerHTML = `
     <div style="font-size:50px;margin-bottom:12px">${correct ? '🎉' : '😅'}</div>
@@ -1431,13 +1431,13 @@ function confirmVote() {
     <p style="color:var(--muted);font-size:14px">C'était la photo de <strong style="color:var(--accent)">${current.author}</strong></p>
   `;
 }
- 
+
 function nextPhotoRound() {
   currentPhotoIdx++;
   document.getElementById('photo-phase-results').style.display = 'none';
   triggerPhotoVote();
 }
- 
+
 // ============================================================
 //  PSEUDO GAME
 // ============================================================
@@ -1446,7 +1446,7 @@ function revealPseudo() {
   const random = players[Math.floor(Math.random() * players.length)];
   document.getElementById('pseudoReveal').textContent = random.pseudo;
   document.getElementById('pseudoRevealSub').textContent = `C'est le pseudo de ce joueur dans ce groupe !`;
- 
+
   // Fake clues
   const clues = [
     `— Pseudo depuis ${Math.floor(Math.random()*10)+1} ans`,
@@ -1455,7 +1455,7 @@ function revealPseudo() {
   ];
   document.getElementById('pseudoClues').innerHTML = clues.join('<br>');
 }
- 
+
 function pseudoChallenge() {
   const players = Object.values(state.players);
   if(players.length < 2) { showToast('⚠️ Besoin de 2 joueurs min !'); return; }
@@ -1463,7 +1463,7 @@ function pseudoChallenge() {
   const p2 = players[Math.floor(Math.random() * players.length)];
   showToast(`🎯 ${p1.pseudo} doit deviner le pseudo d'enfance de ${p2.pseudo} !`);
 }
- 
+
 // ============================================================
 //  GÉO
 // ============================================================
@@ -1474,24 +1474,24 @@ const geoChallenges = [
   "📏 Estime la distance entre toi et l'hôte en km",
   "🌍 Quel joueur est dans une autre région ?",
 ];
- 
+
 function initGeo() {
   document.getElementById('geoPlayersList').innerHTML = '';
   document.getElementById('geoChallenge').textContent = geoChallenges[0];
 }
- 
+
 function newGeoChallenge() {
   const c = geoChallenges[Math.floor(Math.random() * geoChallenges.length)];
   document.getElementById('geoChallenge').textContent = c;
 }
- 
+
 function shareLocation() {
   if(!navigator.geolocation) { showToast('❌ Géolocalisation non supportée'); return; }
   showToast('📍 Localisation en cours…');
- 
+
   navigator.geolocation.getCurrentPosition(pos => {
     state.geoCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
- 
+
     if(firebaseReady && state.roomCode) {
       db.ref('rooms/'+state.roomCode+'/geo/'+state.playerId).set({
         lat: pos.coords.latitude,
@@ -1509,14 +1509,14 @@ function shareLocation() {
     showToast('❌ Accès refusé à la géoloc');
   });
 }
- 
+
 function listenGeo() {
   if(!firebaseReady) return;
   db.ref('rooms/'+state.roomCode+'/geo').on('value', snap => {
     if(snap.val()) renderGeoPlayers(snap.val());
   });
 }
- 
+
 function renderGeoPlayers(data) {
   const list = document.getElementById('geoPlayersList');
   list.innerHTML = '';
@@ -1526,7 +1526,7 @@ function renderGeoPlayers(data) {
       const d = haversine(state.geoCoords.lat, state.geoCoords.lng, g.lat, g.lng);
       dist = d < 1 ? `${Math.round(d*1000)}m` : `${d.toFixed(1)}km`;
     }
- 
+
     const item = document.createElement('div');
     item.className = 'geo-player-item';
     item.innerHTML = `
@@ -1541,7 +1541,7 @@ function renderGeoPlayers(data) {
   });
   document.getElementById('geoStatus').style.display = 'none';
 }
- 
+
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2-lat1) * Math.PI/180;
@@ -1551,7 +1551,7 @@ function haversine(lat1, lon1, lat2, lon2) {
     Math.sin(dLon/2)*Math.sin(dLon/2);
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
- 
+
 // ============================================================
 //  SCORES
 // ============================================================
@@ -1559,11 +1559,11 @@ function showScores() {
   const sorted = Object.entries(state.players)
     .map(([id, p]) => ({ ...p, id, score: state.scores[id] || 0 }))
     .sort((a,b) => b.score - a.score);
- 
+
   const medals = ['gold','silver','bronze'];
   const content = document.getElementById('scoresContent');
   content.innerHTML = '<div class="card-title" style="margin-bottom:16px">Classement final</div>';
- 
+
   sorted.forEach((p, i) => {
     const row = document.createElement('div');
     row.className = 'score-row';
@@ -1575,10 +1575,10 @@ function showScores() {
     `;
     content.appendChild(row);
   });
- 
+
   showScreen('scores');
 }
- 
+
 // ============================================================
 //  INIT
 // ============================================================
