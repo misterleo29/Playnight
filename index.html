@@ -885,7 +885,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyDsNNNs6Pb1NBpbT9v-WL2L1aoZzH711lI",
   authDomain: "nightplay-46382.firebaseapp.com",
-  databaseURL: "https://nightplay-46382-default-rtdb.europe-west1.firebasedatabase.app",
+  databaseURL: "https://nightplay-46382-default-rtdb.europe-west1.firebasedatabase.app/",
   projectId: "nightplay-46382",
   storageBucket: "nightplay-46382.firebasestorage.app",
   messagingSenderId: "553304934009",
@@ -900,6 +900,7 @@ try {
   db = firebase.database();
   storage = firebase.storage();
   firebaseReady = true;
+  console.log('✅ Firebase initialisé OK');
 } catch(e) {
   console.warn("Firebase non configuré, mode démo activé.", e);
 }
@@ -985,6 +986,7 @@ function createRoom() {
   state.players[state.playerId] = { pseudo, host: true, avatar: state.avatarData || null, online: true };
 
   if(firebaseReady) {
+    showToast('⏳ Connexion…');
     db.ref('rooms/'+state.roomCode).set({
       host: state.playerId,
       game: null,
@@ -993,6 +995,9 @@ function createRoom() {
     }).then(() => {
       listenRoom();
       enterLobby();
+    }).catch(err => {
+      console.error('Firebase createRoom error:', err);
+      showToast('❌ ' + err.message, 6000);
     });
   } else {
     enterLobby();
